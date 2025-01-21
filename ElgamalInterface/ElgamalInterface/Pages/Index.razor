@@ -1,0 +1,100 @@
+﻿@page "/"
+@using System.Numerics
+@using ElgamalCore.NumerosGrandes
+@using ElgamalCore.Criptografia
+@using ElgamalCore.Codificacao
+
+<h3>Sistema de Criptografia ElGamal</h3>
+
+<div class="container mt-4">
+    <!-- Gerar Chaves -->
+    <h4>1. Gerar Chaves</h4>
+    <button class="btn btn-primary mb-2" @onclick="GerarChaves">Gerar Chaves</button>
+    @if (!string.IsNullOrEmpty(chavePublica))
+    {
+        <p><b>Chave Pública:</b> @chavePublica</p>
+        <p><b>Chave Privada:</b> @chavePrivada</p>
+    }
+
+    <hr />
+
+    <!-- Criptografar Mensagem -->
+    <h4>2. Criptografar Mensagem</h4>
+    <div class="form-group">
+        <label for="mensagem">Mensagem:</label>
+        <input id="mensagem" type="text" @bind="mensagemOriginal" class="form-control" placeholder="Digite uma mensagem" />
+    </div>
+    <button class="btn btn-success mt-2" @onclick="CriptografarMensagem">Criptografar</button>
+    @if (!string.IsNullOrEmpty(mensagemCriptografada))
+    {
+        <p class="mt-3"><b>Mensagem Criptografada:</b></p>
+        <p>y=@y</p>
+        <p>z=@z</p>
+    }
+
+    <hr />
+
+    <!-- Descriptografar Mensagem -->
+    <h4>3. Descriptografar Mensagem</h4>
+    <button class="btn btn-danger mt-2" @onclick="DescriptografarMensagem">Descriptografar</button>
+    @if (!string.IsNullOrEmpty(mensagemRecuperada))
+    {
+        <p class="mt-3"><b>Mensagem Descriptografada:</b> @mensagemRecuperada</p>
+    }
+</div>
+
+@code {
+    // Variáveis de estado
+    private BigInteger g = 5; // Raiz primitiva
+    private BigInteger p; // Primo seguro
+    private BigInteger t; // Parte da chave pública
+    private BigInteger s; // Chave privada
+    private BigInteger y, z; // Mensagem criptografada
+    private string mensagemOriginal;
+    private string mensagemRecuperada;
+    private string mensagemCriptografada;
+    private string chavePublica;
+    private string chavePrivada;
+
+    // Gerar chaves públicas e privadas
+    private void GerarChaves()
+    {
+        int bitLength = 2048;
+        p = BigNumber.GerarNumeroPrimo(bitLength); // Gerar primo seguro
+        s = BigNumber.GerarNumeroAleatorio(bitLength - 1); // Gerar chave privada
+        t = BigInteger.ModPow(g, s, p); // Gerar chave pública
+
+        chavePublica = $"g={g}, p={p}, t={t}";
+        chavePrivada = $"s={s}";
+    }
+
+    // Criptografar mensagem
+    private void CriptografarMensagem()
+    {
+        if (string.IsNullOrEmpty(mensagemOriginal))
+        {
+            mensagemCriptografada = "Mensagem inválida.";
+            return;
+        }
+
+        BigInteger mensagemCodificada = CodificadorTexto.Codificar(mensagemOriginal);
+
+        // Gerar valor aleatório k
+        BigInteger k;
+        do
+        {
+            k = BigNumber.GerarNumeroAleatorio((int)(p.GetBitLength() - 1));
+        } while (BigInteger.GreatestCommonDivisor(k, p - 1) != 1);
+
+        // Criptografar
+        (y, z) = ElGamal.Criptografar(mensagemCodificada, g, p, t, k);
+        mensagemCriptografada = $"y={y}, z={z}";
+    }
+
+    // Descriptografar mensagem
+    private void DescriptografarMensagem()
+    {
+        BigInteger mensagemCodificada = ElGamal.Descriptografar(y, z, s, p);
+        mensagemRecuperada = CodificadorTexto.Decodificar(mensagemCodificada);
+    }
+}
