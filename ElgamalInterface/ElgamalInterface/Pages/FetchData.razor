@@ -1,48 +1,166 @@
 ﻿@page "/fetchdata"
+@using System.Numerics
+@using ElgamalCore.NumerosGrandes
+@using ElgamalCore.Criptografia
+@using ElgamalCore.Codificacao
 
-<PageTitle>Weather forecast</PageTitle>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
-@using ElgamalInterface.Data
-@inject WeatherForecastService ForecastService
-
-<h1>Weather forecast</h1>
-
-<p>This component demonstrates fetching data from a service.</p>
-
-@if (forecasts == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
+<div class="container">
+    <div class="row">
+        <div class="col-md-5">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <span class="glyphicon glyphicon-comment"></span> Messenger Seguro
+                </div>
+                <div class="panel-body">
+                    <ul class="chat">
+                        @foreach (var mensagem in mensagens)
+                        {
+                            <li class="@(mensagem.EnviadoPorUsuario ? "right" : "left") clearfix">
+                                <span class="chat-img @(mensagem.EnviadoPorUsuario ? "pull-right" : "pull-left")">
+                                    <img src="http://placehold.it/50/@(mensagem.EnviadoPorUsuario ? "FA6F57" : "55C1E7")/fff&text=@(mensagem.EnviadoPorUsuario ? "ME" : "U")"
+                                         alt="User Avatar" class="img-circle" />
+                                </span>
+                                <div class="chat-body clearfix">
+                                    <div class="header">
+                                        @if (mensagem.EnviadoPorUsuario)
+                                        {
+                                            <small class=" text-muted"><span class="glyphicon glyphicon-time"></span>@mensagem.Hora</small>
+                                            <strong class="pull-right primary-font">Você</strong>
+                                        }
+                                        else
+                                        {
+                                            <strong class="primary-font">Usuário</strong>
+                                            <small class="pull-right text-muted">
+                                                <span class="glyphicon glyphicon-time"></span>@mensagem.Hora
+                                            </small>
+                                        }
+                                    </div>
+                                    <p style="word-wrap: break-word; white-space: pre-wrap;">@mensagem.Conteudo</p>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <input id="btn-input" type="text" class="form-control input-sm" placeholder="Digite sua mensagem..."
+                               @bind="mensagemOriginal" @bind:event="oninput" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-warning btn-sm" id="btn-chat" @onclick="CriptografarMensagem">
+                                Enviar
+                            </button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <h4>Gerar Chaves</h4>
+            <button class="btn btn-primary" @onclick="GerarChaves">Gerar Chaves</button>
+            @if (!string.IsNullOrEmpty(chavePublica))
             {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
+                <div class="mt-3">
+                    <p><b>Chave Pública:</b></p>
+                    <pre style="word-wrap: break-word; white-space: pre-wrap;">@chavePublica</pre>
+                    <p><b>Chave Privada(não compartilhada):</b></p>
+                    <pre style="word-wrap: break-word; white-space: pre-wrap;">@chavePrivada</pre>
+                </div>
             }
-        </tbody>
-    </table>
-}
+        </div>
+    </div>
+</div>
+
 
 @code {
-    private WeatherForecast[]? forecasts;
+    // Variáveis de estado
+    private BigInteger g = 5; // Raiz primitiva
+    private BigInteger p; // Primo seguro
+    private BigInteger t; // Parte da chave pública
+    private BigInteger s; // Chave privada
+    private BigInteger y, z; // Mensagem criptografada
+    private string mensagemOriginal;
+    private string mensagemRecuperada;
+    private string mensagemCriptografada;
+    private string chavePublica;
+    private string chavePrivada;
 
-    protected override async Task OnInitializedAsync()
+    // Lista de mensagens (simula o chat)
+    private List<Mensagem> mensagens = new();
+
+    // Classe para mensagens
+    private class Mensagem
     {
-        forecasts = await ForecastService.GetForecastAsync(DateTime.Now);
+        public string Conteudo { get; set; }
+        public string Hora { get; set; } = DateTime.Now.ToString("HH:mm");
+        public bool EnviadoPorUsuario { get; set; }
+    }
+
+    // Gerar chaves públicas e privadas
+    private void GerarChaves()
+    {
+        int bitLength = 2048;
+        p = BigNumber.GerarNumeroPrimo(bitLength); // Gerar primo seguro
+        s = BigNumber.GerarNumeroAleatorio(bitLength - 1); // Gerar chave privada
+        t = BigInteger.ModPow(g, s, p); // Gerar chave pública
+
+        chavePublica = $"g={g}, p={p}, t={t}";
+        chavePrivada = $"s={s}";
+    }
+
+    // Criptografar mensagem
+    private void CriptografarMensagem()
+    {
+        if (string.IsNullOrEmpty(mensagemOriginal))
+        {
+            mensagemCriptografada = "Mensagem inválida.";
+            return;
+        }
+
+        BigInteger mensagemCodificada = CodificadorTexto.Codificar(mensagemOriginal);
+
+        // Gerar valor aleatório k
+        BigInteger k;
+        do
+        {
+            k = BigNumber.GerarNumeroAleatorio((int)(p.GetBitLength() - 1));
+        } while (BigInteger.GreatestCommonDivisor(k, p - 1) != 1);
+
+        // Criptografar a mensagem
+        (y, z) = ElGamal.Criptografar(mensagemCodificada, g, p, t, k);
+        mensagemCriptografada = $"y={y}, z={z}";
+
+        // Adicionar mensagem criptografada à lista
+        mensagens.Add(new Mensagem
+            {
+                Conteudo = mensagemCriptografada,
+                EnviadoPorUsuario = true
+            });
+
+        // Simular recebimento da mensagem descriptografada
+        BigInteger mensagemDecodificada = ElGamal.Descriptografar(y, z, s, p);
+        mensagens.Add(new Mensagem
+            {
+                Conteudo = $"Mensagem Recebida: {CodificadorTexto.Decodificar(mensagemDecodificada)}",
+                EnviadoPorUsuario = false
+            });
+
+        mensagemOriginal = string.Empty; // Limpar o campo de entrada
+    }
+
+    // Descriptografar mensagem
+    private void DescriptografarMensagem()
+    {
+        BigInteger mensagemCodificada = ElGamal.Descriptografar(y, z, s, p);
+        mensagemRecuperada = CodificadorTexto.Decodificar(mensagemCodificada);
+
+        mensagens.Add(new Mensagem
+            {
+                Conteudo = mensagemRecuperada,
+                EnviadoPorUsuario = false
+            });
     }
 }
