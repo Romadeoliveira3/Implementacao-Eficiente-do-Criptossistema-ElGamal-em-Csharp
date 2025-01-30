@@ -20,26 +20,26 @@ namespace ElgamalCore.NumerosGrandes
         {
             if (p <= 0)
                 throw new ArgumentException("O valor de p deve ser maior que zero.");
-
-            if (!TestesPrimalidade.MillerRabin(p, 10))
-                throw new ArgumentException("O valor de p deve ser primo.");
-
-            return BigInteger.Pow(2, p) - 1;
-        }
-
-        /// <summary>
-        /// Encontra o próximo número primo maior ou igual a um dado valor
-        /// </summary>
-        /// <param name="p">Número inicial.</param>
-        /// <returns> O próximo número primo maior ou igual a p.</returns>
-        public static int ProximoPrimo(int p)
-        {
-            if (p <= 0)
-                throw new ArgumentException("O valor de p deve ser maior que zero.");
             int primo = p;
             while (!TestesPrimalidade.MillerRabin(primo, 10))
                 primo++;
-            return primo;
+            return BigInteger.Pow(2, primo) - 1;
+
         }
+
+        ///// <summary>
+        ///// Encontra o próximo número primo maior ou igual a um dado valor
+        ///// </summary>
+        ///// <param name="p">Número inicial.</param>
+        ///// <returns> O próximo número primo maior ou igual a p.</returns>
+        //public static int ProximoPrimo(int P)
+        //{
+        //    if (P <= 0)
+        //        throw new ArgumentException("O valor de p deve ser maior que zero.");
+        //    int primo = P;
+        //    while (!TestesPrimalidade.MillerRabin(primo, 10))
+        //        primo++;
+        //    return primo;
+        //}
     }
 }

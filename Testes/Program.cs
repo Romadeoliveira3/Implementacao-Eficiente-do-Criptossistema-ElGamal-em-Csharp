@@ -14,7 +14,9 @@ namespace ElgamalCore
 
             // Gerar número primo seguro (p)
             int bitLength = 2048;
-            BigInteger primoSeguro = BigNumber.GerarNumeroPrimo(bitLength);
+            int P = 127;
+            BigInteger primoSeguro = MersenneGenerator.GerarMersenne(P);
+            //BigInteger primoSeguro = BigNumber.GerarNumeroPrimo(bitLength);
             Console.WriteLine($"Número primo seguro gerado (p): {primoSeguro}");
 
             // Gerar chave privada (s)

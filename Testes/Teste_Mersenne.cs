@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Numerics;
-using MeuProjeto.NumerosGrandes;
+using ElgamalCore.NumerosGrandes;
 
 namespace MeuProjeto
 {
@@ -13,7 +13,7 @@ namespace MeuProjeto
                 Console.WriteLine("Gerando número de Mersenne...\n");
 
                 int p = 5; // Exemplo: valor de p
-                BigInteger mersenne = MersenneGenerator.GerarMersenne(p);
+                BigInteger mersenne =  MersenneGenerator.GerarMersenne(p);
                 Console.WriteLine($"Número de Mersenne M_{p} = {mersenne}");
 
                 int proximoPrimo = MersenneGenerator.ProximoPrimo(p);

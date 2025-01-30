@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
-using MeuProjeto.Codificacao;
-using MeuProjeto.Criptografia;
+using ElgamalCore.Codificacao;
+using ElgamalCore.Criptografia;
 
 namespace MeuProjeto
 {
