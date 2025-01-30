@@ -91,7 +91,7 @@ O projeto foi desenvolvido com uma estrutura modular para garantir organização
 
 ### Estrutura de Diretórios
 
-...
+```
 ElgamalSolution/
 ├── ElgamalCore/            (Lógica principal do sistema ElGamal)
 │   ├── NumerosGrandes/
@@ -110,7 +110,8 @@ ElgamalSolution/
 │       │   ├── app.css           
 │       │   ├── bootstrap.min.css 
 ├── ElgamalSolution.sln      // Arquivo de solução do Visual Studio que conecta os projetos
-...
+
+```
 
 
 ## Referências
